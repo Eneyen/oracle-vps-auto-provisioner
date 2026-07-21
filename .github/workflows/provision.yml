@@ -2,8 +2,8 @@ name: Oracle VPS Auto Provisioner
 
 on:
   schedule:
-- cron: '*/10 * * * *' # Ejecuta cada 10 minutos        workflow_dispatch:
-
+  - cron: '*/10 * * * *'
+    workflow_dispatch:
         jobs:
           provision:
               runs-on: ubuntu-latest
