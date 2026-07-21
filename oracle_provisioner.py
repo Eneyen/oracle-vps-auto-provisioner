@@ -46,10 +46,10 @@ class OracleVPSProvisioner:
                     'memory_gb': int(os.getenv('MEMORY_GB', '12')),
                 }
 
-        if not all([config['user_ocid'], config['tenancy_ocid'], config['compartment_ocid'], 
-                                       config['subnet_ocid'], config['api_key_path'], config['api_fingerprint']]):
-                                                     logger.error('Faltan variables de configuración de Oracle Cloud')
-                                                     sys.exit(1)
+        if not all([config['user_ocid'], config['tenancy_ocid'], config['compartment_ocid'],
+                                    config['subnet_ocid'], config['api_key_path'], config['api_fingerprint']]]):
+                                                      logger.error('Faltan variables de configuración de Oracle Cloud')
+                                                      sys.exit(1)
 
         return config
 
