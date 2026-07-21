@@ -2,8 +2,7 @@ name: Oracle VPS Auto Provisioner
 
 on:
   schedule:
-      - cron: '0 * * * *'  # Ejecuta cada hora
-        workflow_dispatch:
+- cron: '*/10 * * * *' # Ejecuta cada 10 minutos        workflow_dispatch:
 
         jobs:
           provision:
