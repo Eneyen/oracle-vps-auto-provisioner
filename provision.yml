@@ -1,0 +1,40 @@
+name: Oracle VPS Auto Provisioner
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run provisioner
+        env:
+          ORACLE_USER_OCID: ${{ secrets.ORACLE_USER_OCID }}
+          ORACLE_TENANCY_OCID: ${{ secrets.ORACLE_TENANCY_OCID }}
+          ORACLE_COMPARTMENT_OCID: ${{ secrets.ORACLE_COMPARTMENT_OCID }}
+          ORACLE_SUBNET_OCID: ${{ secrets.ORACLE_SUBNET_OCID }}
+          ORACLE_API_FINGERPRINT: ${{ secrets.ORACLE_API_FINGERPRINT }}
+          ORACLE_API_KEY: ${{ secrets.ORACLE_API_KEY }}
+          ORACLE_IMAGE_ID: ${{ secrets.ORACLE_IMAGE_ID }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          OCPU: '2'
+          MEMORY_GB: '12'
+        run: python oracle_provisioner.py
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: provisioner-logs
+          path: ~/.oci/provision.log
+          retention-days: 7
