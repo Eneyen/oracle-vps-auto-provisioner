@@ -46,8 +46,8 @@ class OracleVPSProvisioner:
                     'memory_gb': int(os.getenv('MEMORY_GB', '12')),
                 }
 
-        if not all([config['user_ocid'], config['tenancy_ocid'], config['compartment_ocid']]):
-                                                      sys.exit(1)
+    if not all([config['user_ocid'], config['tenancy_ocid'], config['compartment_ocid']]):
+      sys.exit(1)
 
         return config
 
