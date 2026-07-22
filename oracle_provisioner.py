@@ -29,14 +29,14 @@ class OracleVPSProvisioner:
         self.retry_delay = 60  # segundos
 
     def load_config(self):
-        """Carga la configuración desde variables de entorno o archivo"""
+        """Carga la configuración desde variables de entorno"""
         config = {
             'user_ocid': os.getenv('ORACLE_USER_OCID'),
             'tenancy_ocid': os.getenv('ORACLE_TENANCY_OCID'),
             'region': os.getenv('ORACLE_REGION', 'eu-frankfurt-1'),
             'compartment_ocid': os.getenv('ORACLE_COMPARTMENT_OCID'),
             'subnet_ocid': os.getenv('ORACLE_SUBNET_OCID'),
-            'api_key_path': os.getenv('ORACLE_API_KEY_PATH'),
+            'api_key_content': os.getenv('ORACLE_API_KEY'),
             'api_fingerprint': os.getenv('ORACLE_API_FINGERPRINT'),
             'email_from': os.getenv('EMAIL_FROM'),
             'email_password': os.getenv('EMAIL_PASSWORD'),
@@ -46,16 +46,17 @@ class OracleVPSProvisioner:
             'memory_gb': int(os.getenv('MEMORY_GB', '12')),
         }
 
-        if not all([config['user_ocid'], config['tenancy_ocid'], config['compartment_ocid']]):
+        if not all([config['user_ocid'], config['tenancy_ocid'], config['compartment_ocid'], config['api_key_content']]):
+            logger.error("Faltan variables críticas en los secretos de GitHub.")
             sys.exit(1)
 
         return config
 
     def create_oci_config(self):
-        """Crea la configuración de OCI para la autenticación"""
+        """Crea la configuración de OCI usando la clave directa en texto"""
         return {
             "user": self.config['user_ocid'],
-            "key_file": self.config['api_key_path'],
+            "key_content": self.config['api_key_content'],
             "fingerprint": self.config['api_fingerprint'],
             "tenancy": self.config['tenancy_ocid'],
             "region": self.config['region']
@@ -88,10 +89,9 @@ Hora de creación: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 Tu VPS está lista para usar.
 """
-
             msg.attach(MIMEText(body, 'plain'))
 
-            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            with smtplib.SMTP_SSL('://gmail.com', 465) as server:
                 server.login(self.config['email_from'], self.config['email_password'])
                 server.send_message(msg)
 
@@ -129,7 +129,6 @@ Tu VPS está lista para usar.
             logger.info(f'✅ Instancia creada exitosamente!')
             logger.info(f'Instance ID: {instance.id}')
 
-            # Enviar email
             self.send_notification_email({
                 'display_name': instance.display_name,
                 'id': instance.id,
@@ -151,16 +150,12 @@ Tu VPS está lista para usar.
             return False
 
     def get_free_tier_image(self):
-        """Obtiene la imagen gratuita de Ubuntu para ARM Ampere A1"""
-        return os.getenv('ORACLE_IMAGE_ID', 'ocid1.image.oc1.eu-frankfurt-1.aaaaaaaxxxxxxx')
+        """Obtiene la imagen gratuita de Ubuntu para Frankfurt (eu-frankfurt-1)"""
+        return os.getenv('ORACLE_IMAGE_ID', 'ocid1.image.oc1.eu-frankfurt-1.aaaaaaaamuep3y5bmsw3b7m6h77rshfuxrwt2yow3oaqf6exu3e4fexuhiq')
 
     def get_ssh_key(self):
-        """Obtiene la clave SSH pública"""
-        ssh_key_path = os.getenv('SSH_PUBLIC_KEY_PATH')
-        if ssh_key_path and os.path.exists(ssh_key_path):
-            with open(ssh_key_path, 'r') as f:
-                return f.read().strip()
-        return ""
+        """Obtiene la clave SSH pública desde una variable o secreto"""
+        return os.getenv('SSH_PUBLIC_KEY', '')
 
     def run_with_retries(self):
         """Ejecuta el script con reintentos"""
