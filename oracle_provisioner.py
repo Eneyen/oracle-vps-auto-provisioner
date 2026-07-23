@@ -28,10 +28,10 @@ class OracleVPSProvisioner:
         self.retry_delay = 60  # segundos
 
     def load_config(self):
-        """Configuración fija y limpia extraída directamente de tu panel de Oracle"""
+        """Configuración fija extraída directamente de tu panel de Oracle"""
         config = {
-            'user_ocid': 'ocid1.user.oc1.aaaaaaaafdkvhi477aynkvlkqbwryfmfptuqkutbspwfsj2m2sj5ziewtoq',
-            'tenancy_ocid': 'ocid1.tenancy.oc1.aaaaaaaabl3kf4gb43gmqgani35n35nc35t7jfilhexuwvxnczkhlk3k1gq',
+            'user_ocid': 'ocid1.user.oc1..aaaaaaaafdkvhi477aynkvlkqbwryfmfptuqkutbspwfsj2m2sj5ziewtoqa',
+            'tenancy_ocid': 'ocid1.tenancy.oc1..aaaaaaaabl3kf4gb43gmqgani35n35nc35t7jfilhexuwvxnczkhlk3k1gqa',
             'region': 'eu-frankfurt-1',
             'compartment_ocid': os.getenv('ORACLE_COMPARTMENT_OCID'),
             'subnet_ocid': os.getenv('ORACLE_SUBNET_OCID'),
@@ -90,8 +90,6 @@ DETALLES DE LA INSTANCIA:
 ESPECIFICACIONES:
 - OCPUs: {self.config['ocpu']}
 - Memoria: {self.config['memory_gb']}GB
-
-Hora de creación: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 """
             msg.attach(MIMEText(body, 'plain'))
 
