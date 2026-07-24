@@ -36,7 +36,7 @@ class OracleVPSProvisioner:
             'compartment_ocid': os.getenv('ORACLE_COMPARTMENT_OCID'),
             'subnet_ocid': os.getenv('ORACLE_SUBNET_OCID'),
             'api_key_path': './key.pem',
-            'api_fingerprint': 'eb:65:2c:4f:5d:6f:c3:c0:11:b1:90:a3:36:13:54:14',
+            'api_fingerprint': '***REMOVED-FINGERPRINT***',
             'email_from': os.getenv('EMAIL_FROM'),
             'email_password': os.getenv('EMAIL_PASSWORD'),
             'email_to': os.getenv('EMAIL_TO'),
