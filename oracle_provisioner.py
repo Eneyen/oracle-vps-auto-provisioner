@@ -103,13 +103,20 @@ ESPECIFICACIONES:
             logger.error(f'Error enviando email: {e}')
             return False
 
-    def try_create_instance(self):
+    def get_availability_domains(self):
+        """Consulta las zonas (Availability Domains) disponibles en la region"""
+        identity_client = oci.identity.IdentityClient(self.create_oci_config())
+        ads = identity_client.list_availability_domains(compartment_id=self.config['tenancy_ocid']).data
+        return [ad.name for ad in ads]
+
+    def try_create_instance(self, availability_domain):
         """Intenta crear la instancia de Oracle Cloud"""
         try:
             oci_config = self.create_oci_config()
             compute_client = oci.core.ComputeClient(oci_config)
 
             instance_details = oci.core.models.LaunchInstanceDetails(
+                availability_domain=availability_domain,
                 display_name=self.config['instance_name'],
                 compartment_id=self.config['compartment_ocid'],
                 image_id=self.get_free_tier_image(compute_client),
@@ -137,7 +144,7 @@ ESPECIFICACIONES:
 
         except oci.exceptions.ServiceError as e:
             if e.status == 400 and 'Out of capacity' in str(e):
-                logger.warning(f'⚠️ Sin capacidad disponible en Frankfurt. Reintentando en {self.retry_delay}s...')
+                logger.warning(f'⚠️ Sin capacidad disponible en {availability_domain}. Reintentando en {self.retry_delay}s...')
                 return False
             else:
                 logger.error(f'Error de OCI: {e}')
@@ -171,18 +178,21 @@ ESPECIFICACIONES:
         return os.getenv('SSH_PUBLIC_KEY', '')
 
     def run_with_retries(self):
-        """Ejecuta los intentos cíclicos"""
-        for attempt in range(1, self.max_retries + 1):
-            logger.info(f'Intento {attempt}/{self.max_retries}...')
+        """Ejecuta los intentos cíclicos, rotando entre las zonas disponibles"""
+        availability_domains = self.get_availability_domains()
+        logger.info(f'Zonas disponibles: {", ".join(availability_domains)}')
 
-            if self.try_create_instance():
+        for attempt in range(1, self.max_retries + 1):
+            ad = availability_domains[(attempt - 1) % len(availability_domains)]
+            logger.info(f'Intento {attempt}/{self.max_retries} en {ad}...')
+
+            if self.try_create_instance(ad):
                 return True
 
             if attempt < self.max_retries:
                 time.sleep(self.retry_delay)
-        else:
-            logger.error('❌ Se agotaron los intentos de esta tanda.')
-            return False
+
+        logger.error('❌ Se agotaron los intentos de esta tanda.')
         return False
 
 def main():
