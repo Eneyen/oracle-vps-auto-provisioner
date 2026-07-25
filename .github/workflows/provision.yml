@@ -18,12 +18,8 @@ jobs:
         run: pip install -r requirements.txt
       - name: Run provisioner
         env:
-          ORACLE_USER_OCID: ${{ secrets.ORACLE_USER_OCID }}
-          ORACLE_TENANCY_OCID: ${{ secrets.ORACLE_TENANCY_OCID }}
           ORACLE_COMPARTMENT_OCID: ${{ secrets.ORACLE_COMPARTMENT_OCID }}
           ORACLE_SUBNET_OCID: ${{ secrets.ORACLE_SUBNET_OCID }}
-          ORACLE_API_FINGERPRINT: ${{ secrets.ORACLE_API_FINGERPRINT }}
-          ORACLE_API_KEY: ${{ secrets.ORACLE_API_KEY }}
           ORACLE_IMAGE_ID: ${{ secrets.ORACLE_IMAGE_ID }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}

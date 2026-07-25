@@ -30,8 +30,8 @@ class OracleVPSProvisioner:
     def load_config(self):
         """Configuración fija extraída directamente de tu panel de Oracle"""
         config = {
-            'user_ocid': 'ocid1.user.oc1..aaaaaaaafdkvhi477aynkvlkqbwryfmfptuqkutbspwfsj2m2sj5ziewtoqa',
-            'tenancy_ocid': 'ocid1.tenancy.oc1..aaaaaaaabl3kf4gb43gmqgani35n35nc35t7jfilhexuwvxnczkhlk3k1gqa',
+            'user_ocid': '***REMOVED-USER-OCID***',
+            'tenancy_ocid': '***REMOVED-TENANCY-OCID***',
             'region': 'eu-frankfurt-1',
             'compartment_ocid': os.getenv('ORACLE_COMPARTMENT_OCID'),
             'subnet_ocid': os.getenv('ORACLE_SUBNET_OCID'),
@@ -93,7 +93,7 @@ ESPECIFICACIONES:
 """
             msg.attach(MIMEText(body, 'plain'))
 
-            with smtplib.SMTP_SSL('://gmail.com', 465) as server:
+            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
                 server.login(self.config['email_from'], self.config['email_password'])
                 server.send_message(msg)
 
@@ -112,7 +112,7 @@ ESPECIFICACIONES:
             instance_details = oci.core.models.LaunchInstanceDetails(
                 display_name=self.config['instance_name'],
                 compartment_id=self.config['compartment_ocid'],
-                image_id=self.get_free_tier_image(),
+                image_id=self.get_free_tier_image(compute_client),
                 shape="VM.Standard.A1.Flex",
                 subnet_id=self.config['subnet_ocid'],
                 shape_config=oci.core.models.LaunchInstanceShapeConfigDetails(
@@ -146,9 +146,25 @@ ESPECIFICACIONES:
             logger.error(f'Error inesperado: {e}')
             return False
 
-    def get_free_tier_image(self):
-        """Imagen gratuita de Ubuntu para Frankfurt (eu-frankfurt-1)"""
-        return 'ocid1.image.oc1.eu-frankfurt-1.aaaaaaaamuep3y5bmsw3b7m6h77rshfuxrwt2yow3oaqf6exu3e4fexuhiq'
+    def get_free_tier_image(self, compute_client):
+        """Busca la imagen de Ubuntu mas reciente compatible con VM.Standard.A1.Flex.
+        Si el secreto ORACLE_IMAGE_ID esta definido, se usa ese en su lugar."""
+        manual_image_id = os.getenv('ORACLE_IMAGE_ID')
+        if manual_image_id:
+            return manual_image_id
+
+        images = compute_client.list_images(
+            compartment_id=self.config['tenancy_ocid'],
+            operating_system='Canonical Ubuntu',
+            shape='VM.Standard.A1.Flex',
+            sort_by='TIMECREATED',
+            sort_order='DESC'
+        ).data
+
+        if not images:
+            raise RuntimeError('No se encontro ninguna imagen de Ubuntu compatible con VM.Standard.A1.Flex')
+
+        return images[0].id
 
     def get_ssh_key(self):
         """Intenta cargar una clave SSH si está configurada"""
