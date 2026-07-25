@@ -143,7 +143,7 @@ ESPECIFICACIONES:
             return True
 
         except oci.exceptions.ServiceError as e:
-            if e.status == 400 and 'Out of capacity' in str(e):
+            if 'Out of capacity' in str(e) or 'Out of host capacity' in str(e):
                 logger.warning(f'⚠️ Sin capacidad disponible en {availability_domain}. Reintentando en {self.retry_delay}s...')
                 return False
             else:
