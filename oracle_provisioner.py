@@ -28,15 +28,15 @@ class OracleVPSProvisioner:
         self.retry_delay = 60  # segundos
 
     def load_config(self):
-        """Configuración fija extraída directamente de tu panel de Oracle"""
+        """Configuración cargada desde GitHub Secrets"""
         config = {
-            'user_ocid': '***REMOVED-USER-OCID***',
-            'tenancy_ocid': '***REMOVED-TENANCY-OCID***',
+            'user_ocid': os.getenv('ORACLE_USER_OCID'),
+            'tenancy_ocid': os.getenv('ORACLE_TENANCY_OCID'),
             'region': 'eu-frankfurt-1',
             'compartment_ocid': os.getenv('ORACLE_COMPARTMENT_OCID'),
             'subnet_ocid': os.getenv('ORACLE_SUBNET_OCID'),
-            'api_key_path': './key.pem',
-            'api_fingerprint': '***REMOVED-FINGERPRINT***',
+            'api_key_content': os.getenv('ORACLE_API_KEY'),
+            'api_fingerprint': os.getenv('ORACLE_API_FINGERPRINT'),
             'email_from': os.getenv('EMAIL_FROM'),
             'email_password': os.getenv('EMAIL_PASSWORD'),
             'email_to': os.getenv('EMAIL_TO'),
@@ -49,8 +49,10 @@ class OracleVPSProvisioner:
         if not config['compartment_ocid']:
             config['compartment_ocid'] = config['tenancy_ocid']
 
-        if not config['subnet_ocid']:
-            logger.error("❌ Error: Falta configurar el secreto ORACLE_SUBNET_OCID en GitHub.")
+        required = ['user_ocid', 'tenancy_ocid', 'subnet_ocid', 'api_key_content', 'api_fingerprint']
+        missing = [key for key in required if not config[key]]
+        if missing:
+            logger.error(f"❌ Error: Faltan secretos de GitHub: {', '.join(missing)}")
             sys.exit(1)
 
         return config
@@ -59,7 +61,7 @@ class OracleVPSProvisioner:
         """Crea la configuración de OCI para la autenticación"""
         return {
             "user": self.config['user_ocid'],
-            "key_file": self.config['api_key_path'],
+            "key_content": self.config['api_key_content'],
             "fingerprint": self.config['api_fingerprint'],
             "tenancy": self.config['tenancy_ocid'],
             "region": self.config['region']
