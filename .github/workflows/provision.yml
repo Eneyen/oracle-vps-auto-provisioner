@@ -25,6 +25,7 @@ jobs:
           ORACLE_COMPARTMENT_OCID: ${{ secrets.ORACLE_COMPARTMENT_OCID }}
           ORACLE_SUBNET_OCID: ${{ secrets.ORACLE_SUBNET_OCID }}
           ORACLE_IMAGE_ID: ${{ secrets.ORACLE_IMAGE_ID }}
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
