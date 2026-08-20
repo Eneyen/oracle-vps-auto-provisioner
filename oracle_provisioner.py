@@ -30,17 +30,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def is_out_of_capacity_error(service_error):
-    """Detecta si un ServiceError es por falta de capacidad usando campos estructurados.
-
-    Estrategia conservadora:
-    1. Códigos específicos de falta de capacidad -> NO_CAPACITY.
-    2. Caso real observado en OCI: status=500 + code='InternalError' + mensaje exacto
-       de falta de capacidad -> NO_CAPACITY.
-    3. Si existe otro code distinto, nunca permitir fallback por texto.
-    4. Si code está vacío/ausente, usar fallback textual normalizado.
-
-    Retorna True solo cuando la respuesta corresponde inequívocamente a falta de capacidad.
-    """
+    """Detecta si un ServiceError es por falta de capacidad usando campos estructurados."""
     if not hasattr(service_error, 'code') or not hasattr(service_error, 'message'):
         return False
 
@@ -48,24 +38,21 @@ def is_out_of_capacity_error(service_error):
     status = getattr(service_error, 'status', None)
     raw_message = str(service_error.message) if service_error.message else ''
     message = ' '.join(raw_message.lower().split())
+    normalized_message = message.rstrip(' .:;!?')
 
     capacity_codes = ('outhostcapacity', 'outhostcapacityexception', 'outofhostcapacity')
-
-    # Nivel 1: códigos específicos de capacidad.
     if code in capacity_codes:
         return True
 
-    # Nivel 2: comportamiento real observado en OCI Frankfurt.
-    # Oracle puede devolver InternalError/500 con el mensaje "Out of host capacity."
+    # Caso real observado en OCI Frankfurt:
+    # code=InternalError, status=500, message='Out of host capacity.'
     if code == 'internalerror' and status == 500:
-        if message in ('out of host capacity', 'out of capacity'):
+        if normalized_message in ('out of host capacity', 'out of capacity'):
             return True
 
-    # Nivel 3: si hay cualquier otro código estructurado, es un error real.
     if code:
         return False
 
-    # Nivel 4: fallback solo cuando OCI no proporciona code.
     if 'out of capacity' in message or 'out of host capacity' in message:
         return True
 
