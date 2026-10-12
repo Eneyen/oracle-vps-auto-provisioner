@@ -1,2 +1,5 @@
 key.pem
 *.pem
+.venv/
+__pycache__/
+*.pyc
