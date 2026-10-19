@@ -2,10 +2,11 @@ name: Oracle VPS Auto Provisioner
 
 on:
   schedule:
-    # GitHub no garantiza esta frecuencia: en la practica lanza la ejecucion
-    # cada varias horas. Por eso cada ejecucion sondea durante horas seguidas
-    # (MAX_RUNTIME_SECONDS) en vez de rendirse a los 10 minutos.
-    - cron: '*/10 * * * *'
+    # Cada ejecucion sondea 5 h 30 seguidas, asi que se lanza cada 6 horas:
+    # si se lanzara cada 10 minutos (como antes) las ejecuciones se apilarian
+    # en cola y GitHub iria cancelando las que esperan turno, enviando avisos
+    # de "run cancelled" que parecen fallos y no lo son.
+    - cron: '0 */6 * * *'
   workflow_dispatch:
     inputs:
       max_runtime_seconds:
